@@ -2,14 +2,14 @@ package by.stolybko;
 
 import by.stolybko.app.Client;
 import by.stolybko.app.Server;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
+
     public static void main(String[] args) throws InterruptedException {
         List<Integer> dataList = new ArrayList<>();
-        int n = 100;
+        int n = 10;
         int acc = 0;
         for (int i = 1; i <= n; i++) {
             dataList.add(i);
