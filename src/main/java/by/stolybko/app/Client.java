@@ -7,37 +7,59 @@ import org.apache.logging.log4j.Logger;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
+
 
 @RequiredArgsConstructor
-public class Client implements Runnable {
+public class Client {
 
     private static final Logger LOGGER = LogManager.getLogger(Client.class);
+    private static final ReentrantLock LOCK = new ReentrantLock();
     private final List<Integer> data;
     private final Server server;
-    private int accumulator;
+    private static final AtomicInteger accumulator = new AtomicInteger(0);
+    //private int accumulator;
 
 
-    @Override
-    public void run() {
+    public void sendData() {
         Random random = new Random();
-
-        while (!data.isEmpty())  {
+        ExecutorService executor = Executors.newCachedThreadPool();
+        while (!data.isEmpty()) {
             int value = data.remove(random.nextInt(data.size()));
             DataTransfer dataTransfer = new DataTransfer(value);
-            LOGGER.info("Client отправил запрос: {}", value);
-            Integer integer = null;
-            try {
-                integer = server.process(dataTransfer).get().value();
-                LOGGER.info("Client получил ответ: {}", integer);
-            } catch (InterruptedException | ExecutionException e) {
-                throw new RuntimeException(e);
-            }
+            executor.submit(() -> {
+                LOGGER.info("Client отправил запрос: {}", value);
+                int integer;
+                try {
+                    integer = server.process(dataTransfer).get().value();
+                    LOGGER.info("Client получил ответ: {}", integer);
+                    accumulator.addAndGet(value);
+                    Thread.sleep(random.nextInt(100) + 100);
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+            });
 
-            accumulator += integer;
+        }
+        executor.shutdown();
+        while (!executor.isTerminated()) {
+            // ждем завершения всех потоков
         }
     }
 
     public int getAccumulator() {
-        return accumulator;
+        return accumulator.get();
     }
+
+//    private void addAccumulator(int value) {
+//        LOCK.lock();
+//        try {
+//            accumulator.addAndGet(value);
+//        } finally {
+//            LOCK.unlock();
+//        }
+//    }
 }

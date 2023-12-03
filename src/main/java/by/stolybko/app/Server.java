@@ -5,24 +5,44 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Server {
 
     private static final Logger LOGGER = LogManager.getLogger(Server.class);
+    private static final ReentrantLock LOCK = new ReentrantLock();
     private final List<Integer> requestValues = new ArrayList<>();
-    private final ExecutorService executor = Executors.newFixedThreadPool(5);
+    private final ExecutorService executor = Executors.newFixedThreadPool(20);
+    private final Random random = new Random();
 
     public Future<DataTransfer> process(DataTransfer dataTransfer) {
         return executor.submit(() -> {
-            requestValues.add(dataTransfer.value());
-            LOGGER.info("Server сохранил входящие данные: {}", dataTransfer.value());
-            return new DataTransfer(requestValues.size());
+            try {
+                Thread.sleep(random.nextInt(100) + 100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            //requestValues.add(dataTransfer.value());
+            LOCK.lock();
+            try {
+                requestValues.add(dataTransfer.value());
+                LOGGER.info("Server сохранил входящие данные: {}", dataTransfer.value());
+                return new DataTransfer(requestValues.size());
+            } finally {
+                LOCK.unlock();
+            }
         });
     }
+
+//    public  DataTransfer process(DataTransfer dataTransfer) {
+//        addRequestValues(dataTransfer.value());
+//        LOGGER.info("Server сохранил входящие данные: {}", dataTransfer.value());
+//        return new DataTransfer(requestValues.size());
+//    }
 
     public void shutdown() {
         executor.shutdown();
@@ -31,4 +51,13 @@ public class Server {
     public List<Integer> getRequestValues() {
         return requestValues;
     }
+
+//    private void addRequestValues(int value) {
+//        LOCK.lock();
+//        try {
+//            requestValues.add(value);
+//        } finally {
+//            LOCK.unlock();
+//        }
+//    }
 }

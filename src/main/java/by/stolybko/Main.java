@@ -9,7 +9,7 @@ public class Main {
 
     public static void main(String[] args) throws InterruptedException {
         List<Integer> dataList = new ArrayList<>();
-        int n = 10;
+        int n = 1000;
         int acc = 0;
         for (int i = 1; i <= n; i++) {
             dataList.add(i);
@@ -20,9 +20,13 @@ public class Main {
         Server server = new Server();
         Client client = new Client(dataList, server);
 
-        Thread clientThread = new Thread(client);
+        client.sendData();
+        /*Thread clientThread = new Thread(client);
+        //Thread clientThread2 = new Thread(client);
         clientThread.start();
+        //clientThread2.start();
         clientThread.join();
+        //clientThread2.join();*/
 
         server.shutdown();
 
