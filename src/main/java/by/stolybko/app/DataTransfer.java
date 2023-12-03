@@ -1,9 +1,10 @@
 package by.stolybko.app;
 
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
-@Data
-public class DataTransfer {
 
-    private int value;
+
+public record DataTransfer(int value) {
+
 }
