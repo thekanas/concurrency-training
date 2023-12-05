@@ -10,21 +10,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
 
 
 @RequiredArgsConstructor
 public class Client {
 
     private static final Logger LOGGER = LogManager.getLogger(Client.class);
-    private static final ReentrantLock LOCK = new ReentrantLock();
-    private final List<Integer> data;
     private final Server server;
-    private static final AtomicInteger accumulator = new AtomicInteger(0);
-    //private int accumulator;
+    private final AtomicInteger accumulator = new AtomicInteger(0);
 
 
-    public void sendData() {
+    public void sendData(List<Integer> data) {
         Random random = new Random();
         ExecutorService executor = Executors.newCachedThreadPool();
         while (!data.isEmpty()) {
@@ -34,10 +30,10 @@ public class Client {
                 LOGGER.info("Client отправил запрос: {}", value);
                 int integer;
                 try {
+                    Thread.sleep(random.nextInt(100) + 100);
                     integer = server.process(dataTransfer).get().value();
                     LOGGER.info("Client получил ответ: {}", integer);
-                    accumulator.addAndGet(value);
-                    Thread.sleep(random.nextInt(100) + 100);
+                    accumulator.addAndGet(integer);
                 } catch (InterruptedException | ExecutionException e) {
                     throw new RuntimeException(e);
                 }
@@ -46,20 +42,10 @@ public class Client {
         }
         executor.shutdown();
         while (!executor.isTerminated()) {
-            // ждем завершения всех потоков
         }
     }
 
     public int getAccumulator() {
         return accumulator.get();
     }
-
-//    private void addAccumulator(int value) {
-//        LOCK.lock();
-//        try {
-//            accumulator.addAndGet(value);
-//        } finally {
-//            LOCK.unlock();
-//        }
-//    }
 }

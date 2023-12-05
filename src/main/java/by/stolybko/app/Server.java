@@ -11,13 +11,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantLock;
 
+
 public class Server {
 
     private static final Logger LOGGER = LogManager.getLogger(Server.class);
     private static final ReentrantLock LOCK = new ReentrantLock();
-    private final List<Integer> requestValues = new ArrayList<>();
     private final ExecutorService executor = Executors.newFixedThreadPool(20);
     private final Random random = new Random();
+    private final List<Integer> requestValues = new ArrayList<>();
+
 
     public Future<DataTransfer> process(DataTransfer dataTransfer) {
         return executor.submit(() -> {
@@ -26,7 +28,6 @@ public class Server {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            //requestValues.add(dataTransfer.value());
             LOCK.lock();
             try {
                 requestValues.add(dataTransfer.value());
@@ -38,12 +39,6 @@ public class Server {
         });
     }
 
-//    public  DataTransfer process(DataTransfer dataTransfer) {
-//        addRequestValues(dataTransfer.value());
-//        LOGGER.info("Server сохранил входящие данные: {}", dataTransfer.value());
-//        return new DataTransfer(requestValues.size());
-//    }
-
     public void shutdown() {
         executor.shutdown();
     }
@@ -51,13 +46,4 @@ public class Server {
     public List<Integer> getRequestValues() {
         return requestValues;
     }
-
-//    private void addRequestValues(int value) {
-//        LOCK.lock();
-//        try {
-//            requestValues.add(value);
-//        } finally {
-//            LOCK.unlock();
-//        }
-//    }
 }
